@@ -1,0 +1,61 @@
+name:                with-timing
+version:             0.1.0.0
+synopsis:            A wrapper for shell commands that records timing and attempts to predict how long commands will take.
+homepage:            https://github.com/holguinj/with-timing#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Justin Holguin
+maintainer:          justin.h.holguin@gmail.com
+copyright:           2017
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     WithTiming
+                     , WithTiming.Program
+                     , WithTiming.Prediction
+  build-depends:       base >= 4.7 && < 5
+                     , text <= 1.3
+                     , turtle >= 1.3.6
+                     , time >= 1.6
+                     , free >= 4.12
+                     , aeson-pretty >= 0.8.5
+  default-language:    Haskell2010
+
+executable with-timing
+  hs-source-dirs:      app
+  other-modules:       WithTiming.Storage
+                     , WithTiming.Shell
+                     , WithTiming.RunProgram
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                       , with-timing
+                       , time >= 1.6
+                       , text <= 1.3
+                       , turtle >= 1.3.6
+                       , aeson < 1.3
+                       , aeson-pretty >= 0.8.5
+                       , containers
+                       , bytestring >= 0.10
+                       , optparse-applicative >= 0.14.0.0
+                       , free >= 4.12
+                       , directory >= 1.3.0.0
+                       , filepath >= 1.4.1.1
+  default-language:    Haskell2010
+
+test-suite with-timing-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , with-timing
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/holguinj/with-timing
