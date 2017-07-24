@@ -1,20 +1,19 @@
 module Main where
 
-import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Control.Monad.IO.Class (MonadIO)
 import           Data.Maybe             (fromMaybe)
 import           Data.Semigroup         ((<>))
 import qualified Data.Text              as T
 import           Options.Applicative    hiding (command)
 import           WithTiming.Program     (basic)
 import           WithTiming.RunProgram  (runShellJSON)
-import           WithTiming.Shell       (execShell, getFullPath)
-import           WithTiming.Storage     (getPreviousResult, updateResultFile)
+import           WithTiming.Shell       (getFullPath)
 
 data BaseArgs = BaseArgs
   { _file    :: String
   , _key     :: Maybe String
   , _command :: String
-  } deriving (Show)
+  }
 
 data NormalArgs = NormalArgs
   { file    :: FilePath
