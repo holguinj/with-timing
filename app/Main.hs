@@ -5,7 +5,6 @@ import           Data.Maybe             (fromMaybe)
 import           Data.Semigroup         ((<>))
 import qualified Data.Text              as T
 import           Options.Applicative    hiding (command)
-import           WithTiming
 import           WithTiming.Program     (basic)
 import           WithTiming.RunProgram  (runShellJSON)
 import           WithTiming.Shell       (execShell, getFullPath)
