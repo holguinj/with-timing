@@ -56,15 +56,15 @@ argParse = BaseArgs
         <*> strArgument commandArgument
 
 main :: IO ()
-main = doStuff =<< execParser opts
+main = runArgs =<< execParser opts
   where
     opts = info (argParse <**> helper)
       ( fullDesc
      <> progDesc "Run a command with timing and prediction."
      <> header "with-timing - a utility for timing and prediction of shell commands.")
 
-doStuff :: BaseArgs -> IO ()
-doStuff baseArgs = do
+runArgs :: BaseArgs -> IO ()
+runArgs baseArgs = do
   args <- normalize baseArgs
   let program = basic (key args) (command args)
   runShellJSON (file args) program
