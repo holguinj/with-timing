@@ -28,7 +28,7 @@ normalize args = do
   return $ NormalArgs
     { file = fullPath
     , key = fromMaybe (_command args) (_key args)
-    , command = T.pack $ _command args
+    , command = T.pack (_command args)
     }
 
 commandArgument :: Mod ArgumentFields a
