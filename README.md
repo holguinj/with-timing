@@ -48,7 +48,7 @@ I have a script that gets provisions a set of VMs on my company's private infras
 with-timing "provision.sh --fast-version"
 ```
 
-with-timing uses the whole command as the key by default, so it will be sensitive to the differences in flags.
+`with-timing` uses the whole command as the key by default, so it will be sensitive to the differences in flags.
 That means that running a quicker version of the command won't screw up the predictions for the longer-running version:
 
 ```
@@ -75,6 +75,7 @@ I work on a lot of Clojure projects where the tests take 5-10 minutes (or longer
 `alias lta='with-timing --key "$(pwd):tests" "lein test :all"'`
 
 It's important to include `$(pwd)` in the `--key` argument because the command `lein test :all` will take more or less time depending on the project I'm testing.
+I encourage you to use interpolation like that to make sure your predictions are useful.
 
 Another thing to keep in mind with this use case: if the command exits non-zero (e.g., if test fail), the timing won't be recorded for next time.
 
