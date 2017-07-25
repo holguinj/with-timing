@@ -84,28 +84,12 @@ inform msg = liftF (Inform msg ())
 writeResult :: Key -> Integer -> Program time ()
 writeResult key duration = liftF (WriteResult key duration ())
 
-example :: Program Integer ExitCode
-example = do
-  let key = "example"
-  prev <- readPrevious key
-  predict prev
-  start <- beginTimer
-  exitCode <- execute "echo 'hello'"
-  if (successful exitCode) then do
-    time <- secondsSince start
-    inform "command succeeded!"
-    inform $ "that took " ++ (show time) ++ " seconds."
-    writeResult key time
-  else do
-    inform "command failed :("
-    inform "not recording results."
-  return exitCode
-
 showSeconds :: Integer -> String
 showSeconds n =
   let secs = filter (not . (==) '"') (show n) in
   secs ++ " seconds"
 
+-- | A typical example of a program constructed in the 'Program' type.
 basic :: Key -> T.Text -> Program time ExitCode
 basic key command = do
   prev <- readPrevious key
