@@ -5,6 +5,7 @@ import           Data.Maybe             (fromMaybe)
 import           Data.Semigroup         ((<>))
 import qualified Data.Text              as T
 import           Options.Applicative    hiding (command)
+import           System.Exit            (ExitCode (..), exitWith)
 import           WithTiming.Program     (basic)
 import           WithTiming.RunProgram  (runShellJSON)
 import           WithTiming.Shell       (getFullPath)
@@ -66,4 +67,5 @@ runArgs :: BaseArgs -> IO ()
 runArgs baseArgs = do
   args <- normalize baseArgs
   let program = basic (key args) (command args)
-  runShellJSON (file args) program
+  exitCode <- runShellJSON (file args) program
+  exitWith exitCode

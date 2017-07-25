@@ -3,6 +3,7 @@ module WithTiming.RunProgram (runShellJSON) where
 import           Control.Monad.Free
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Time              (UTCTime)
+import           System.Exit            (ExitCode)
 import           WithTiming.Prediction  (getCurrentTime, getLocalTZ,
                                          getReadableEstimate, getSecondsSince,
                                          readableEstimate)
@@ -14,7 +15,7 @@ import           WithTiming.Storage     as S
 --   1. Uses Data.Time.UTCTime to track timing.
 --   2. Uses JSON to differentiate keys.
 --   3. Actually executes shell actions.
-runShellJSON :: MonadIO io => FilePath -> Program UTCTime a -> io ()
+runShellJSON :: MonadIO io => FilePath -> Program UTCTime ExitCode -> io ExitCode
 runShellJSON file prog = case prog of
   Free (ReadPrevious key g) -> do
     prev <- S.getPreviousResult file key
@@ -30,8 +31,8 @@ runShellJSON file prog = case prog of
     now <- getCurrentTime
     runShellJSON file $ g now
   Free (Execute shell g) -> do
-    success <- execShell shell
-    runShellJSON file $ g success
+    exitCode <- execShell shell
+    runShellJSON file $ g exitCode
   Free (SecondsSince time g) -> do
     diff <- getSecondsSince time
     runShellJSON file $ g diff
@@ -41,4 +42,4 @@ runShellJSON file prog = case prog of
   Free (WriteResult key dur next) -> do
     S.updateResultFile file key dur
     runShellJSON file next
-  Pure r -> return ()
+  Pure exitCode -> return exitCode

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module WithTiming.Program
@@ -16,10 +16,14 @@ module WithTiming.Program
   ) where
 
 import           Control.Monad.Free (Free (..), liftF)
-import qualified Data.Text as T
+import qualified Data.Text          as T
+import           System.Exit        (ExitCode(..))
 
 type Key = String
-type Success = Bool
+
+successful :: ExitCode -> Bool
+successful ExitSuccess = True
+successful _ = False
 
 -- | A type representing steps in a typical program execution. Used in the
 -- Program monad via functions with names that correspond to the type
@@ -36,7 +40,7 @@ data Command time next =
   -- ^ Output a prediction for the current run, which may not have a precedent.
   | BeginTimer (time -> next)
   -- ^ Return an object referring to the start time of the command.
-  | Execute T.Text (Success -> next)
+  | Execute T.Text (ExitCode -> next)
   -- ^ Perform the shell action, returning a result in the required type.
   | SecondsSince time (Integer -> next)
   -- ^ Determine the number of seconds that have passed since the 'time' object was created.
@@ -64,7 +68,7 @@ beginTimer :: Program time time
 beginTimer = liftF (BeginTimer id)
 
 -- | Perform the shell action, returning a result in the required type.
-execute :: T.Text -> Program time Success
+execute :: T.Text -> Program time ExitCode
 execute shell = liftF (Execute shell id)
 
 -- | Determine the number of seconds that have passed since the 'time' object was created.
@@ -79,14 +83,14 @@ inform msg = liftF (Inform msg ())
 writeResult :: Key -> Integer -> Program time ()
 writeResult key duration = liftF (WriteResult key duration ())
 
-example :: Program Integer ()
+example :: Program Integer ExitCode
 example = do
   let key = "example"
   prev <- readPrevious key
   predict prev
   start <- beginTimer
-  success <- execute "echo 'hello'"
-  if success then do
+  exitCode <- execute "echo 'hello'"
+  if (successful exitCode) then do
     time <- secondsSince start
     inform "command succeeded!"
     inform $ "that took " ++ (show time) ++ " seconds."
@@ -94,6 +98,7 @@ example = do
   else do
     inform "command failed :("
     inform "not recording results."
+  return exitCode
 
 -- | An example interpreter that reduces the commands to [String].
 -- Assumes 'Nothing' for a previous run, True for 'success', and 10s for timing.
@@ -102,7 +107,7 @@ stringify prog = case prog of
   Free (ReadPrevious key g) -> ("Read " ++ key) : stringify (g Nothing)
   Free (Predict mdur g) -> ("Predicting based on " ++ (show mdur)) : stringify g
   Free (BeginTimer g) -> "Starting timer." : stringify (g 0)
-  Free (Execute shell g) -> ("Executing: " ++ (show shell)) : stringify (g True)
+  Free (Execute shell g) -> ("Executing: " ++ (show shell)) : stringify (g ExitSuccess)
   Free (SecondsSince time g) -> "Calculated difference of 10s." : stringify (g 10)
   Free (Inform msg next) -> ("Informing: " ++ msg) : stringify next
   Free (WriteResult key dur next) -> ("Writing " ++ (show dur) ++ " for key " ++ key) : stringify next
@@ -113,15 +118,16 @@ showSeconds n =
   let secs = filter (not . (==) '"') (show n) in
   secs ++ " seconds"
 
-basic :: Key -> T.Text -> Program time ()
+basic :: Key -> T.Text -> Program time ExitCode
 basic key command = do
   prev <- readPrevious key
   predict prev
   start <- beginTimer
-  success <- execute command
-  if success then do
+  exitCode <- execute command
+  if (successful exitCode) then do
     time <- secondsSince start
     inform $ "Command executed successfully in " ++ (showSeconds time) ++ "."
     writeResult key time
   else do
     inform "Command failed! Not recording results."
+  return exitCode
