@@ -3,6 +3,8 @@
 
 module WithTiming.Program
   ( Command(..)
+  , InterpretedCommand(..)
+  , interpretPure
   , Program
   , basic
   , readPrevious
@@ -12,12 +14,11 @@ module WithTiming.Program
   , secondsSince
   , inform
   , writeResult
-  , stringify
   ) where
 
 import           Control.Monad.Free (Free (..), liftF)
 import qualified Data.Text          as T
-import           System.Exit        (ExitCode(..))
+import           System.Exit        (ExitCode (..))
 
 type Key = String
 
@@ -100,19 +101,6 @@ example = do
     inform "not recording results."
   return exitCode
 
--- | An example interpreter that reduces the commands to [String].
--- Assumes 'Nothing' for a previous run, True for 'success', and 10s for timing.
-stringify :: Show a => Program Integer a -> [String]
-stringify prog = case prog of
-  Free (ReadPrevious key g) -> ("Read " ++ key) : stringify (g Nothing)
-  Free (Predict mdur g) -> ("Predicting based on " ++ (show mdur)) : stringify g
-  Free (BeginTimer g) -> "Starting timer." : stringify (g 0)
-  Free (Execute shell g) -> ("Executing: " ++ (show shell)) : stringify (g ExitSuccess)
-  Free (SecondsSince time g) -> "Calculated difference of 10s." : stringify (g 10)
-  Free (Inform msg next) -> ("Informing: " ++ msg) : stringify next
-  Free (WriteResult key dur next) -> ("Writing " ++ (show dur) ++ " for key " ++ key) : stringify next
-  Pure r -> ["Returns: " ++ (show r)]
-
 showSeconds :: Integer -> String
 showSeconds n =
   let secs = filter (not . (==) '"') (show n) in
@@ -128,6 +116,39 @@ basic key command = do
     time <- secondsSince start
     inform $ "Command executed successfully in " ++ (showSeconds time) ++ "."
     writeResult key time
-  else do
+  else
     inform "Command failed! Not recording results."
   return exitCode
+
+-- | A minimal target for interpreting a Program, useful for tests and
+-- debugging.
+data InterpretedCommand =
+    ReadingPrevious Key
+  | Predicting (Maybe Integer)
+  | BeginningTimer
+  | Executing T.Text
+  | CountingSeconds Integer
+  | Informing String
+  | WritingResult Key Integer
+  | Returning ExitCode
+  deriving (Show)
+
+-- | An example interpreter that reduces the commands to '[InterpretedCommand]'.
+-- intended to be used in testing and debugging. Uses mocked values instead of
+-- side-effects.
+interpretPure :: (Maybe Integer)     -- ^ The result of looking up a key
+              -> Integer             -- ^ The number of seconds returned by 'secondsSince'
+              -> ExitCode            -- ^ The result of the shell command
+              -> Program () ExitCode -- ^ a program that uses () for its time type and returns an 'ExitCode'
+              -> [InterpretedCommand]
+interpretPure keyLookup seconds exitCode prog = case prog of
+  Free (ReadPrevious key g) -> ReadingPrevious key : recur (g keyLookup)
+  Free (Predict mdur next) -> Predicting mdur : recur next
+  Free (BeginTimer g) -> BeginningTimer : recur (g ())
+  Free (Execute shell g) -> Executing shell : recur (g exitCode)
+  Free (SecondsSince time g) -> CountingSeconds seconds : recur (g seconds)
+  Free (Inform msg next) -> Informing msg : recur next
+  Free (WriteResult key dur next) -> WritingResult key dur : recur next
+  Pure r -> [Returning r]
+  where
+    recur = interpretPure keyLookup seconds exitCode
