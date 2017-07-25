@@ -121,7 +121,8 @@ basic key command = do
   return exitCode
 
 -- | A minimal target for interpreting a Program, useful for tests and
--- debugging.
+-- debugging. Represents concrete actions that are the result of
+-- (hypothetically) running the Program.
 data InterpretedCommand =
     ReadingPrevious Key
   | Predicting (Maybe Integer)
@@ -136,11 +137,11 @@ data InterpretedCommand =
 -- | An example interpreter that reduces the commands to '[InterpretedCommand]'.
 -- intended to be used in testing and debugging. Uses mocked values instead of
 -- side-effects.
-interpretPure :: (Maybe Integer)     -- ^ The result of looking up a key
-              -> Integer             -- ^ The number of seconds returned by 'secondsSince'
-              -> ExitCode            -- ^ The result of the shell command
-              -> Program () ExitCode -- ^ a program that uses () for its time type and returns an 'ExitCode'
-              -> [InterpretedCommand]
+interpretPure :: (Maybe Integer)      -- ^ The result of looking up a key
+              -> Integer              -- ^ The number of seconds returned by 'secondsSince'
+              -> ExitCode             -- ^ The result of the shell command
+              -> Program () ExitCode  -- ^ A program that uses () for its time type and returns an 'ExitCode'
+              -> [InterpretedCommand] -- ^ A list of concrete actions resulting from the program.
 interpretPure keyLookup seconds exitCode prog = case prog of
   Free (ReadPrevious key g) -> ReadingPrevious key : recur (g keyLookup)
   Free (Predict mdur next) -> Predicting mdur : recur next
