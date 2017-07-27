@@ -3,7 +3,7 @@
 A wrapper for long-running shell commands that:
 
 * records how long your commands usually take in a JSON-encoded file
-* on subsequent runs, uses the recorded time to predict how long a command will take.
+* on subsequent runs, uses the last recorded time to predict how long a command will take.
 
 for example:
 
