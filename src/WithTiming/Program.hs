@@ -116,9 +116,9 @@ data InterpretedCommand =
   | Informing String
   | WritingResult Key Integer
   | Returning ExitCode
-  deriving (Show)
+  deriving (Show, Eq)
 
--- | An example interpreter that reduces the commands to '[InterpretedCommand]'.
+-- | An example interpreter that reduces the commands to ['InterpretedCommand'].
 -- intended to be used in testing and debugging. Uses mocked values instead of
 -- side-effects.
 interpretPure :: (Maybe Integer)      -- ^ The result of looking up a key
