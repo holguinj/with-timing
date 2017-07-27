@@ -35,7 +35,12 @@ main = hspec $ do
         not (writesAnyResult failing)
       it "exits as expected" $ do
         failing `exitsWith` badExit
-
+    describe "when there's no previous value" $ do
+      let noPrevious = interpretPure Nothing duration goodExit (basic key command)
+      it "still calls the prediction function" $ do
+        noPrevious `hasCommand` (Predicting Nothing)
+      it "executes the command" $ do
+        noPrevious `hasCommand` (Executing command)
 
 
 
