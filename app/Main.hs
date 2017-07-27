@@ -6,21 +6,24 @@ import           Data.Semigroup         ((<>))
 import qualified Data.Text              as T
 import           Options.Applicative    hiding (command)
 import           System.Exit            (ExitCode (..), exitWith)
-import           WithTiming.Program     (basic)
+import           WithTiming.Program     (Program)
+import qualified WithTiming.Programs    as Programs
 import           WithTiming.RunProgram  (runShellJSON)
 import           WithTiming.Shell       (getFullPath)
 
 data BaseArgs = BaseArgs
-  { _file    :: String
-  , _key     :: Maybe String
-  , _command :: String
+  { _file         :: String
+  , _key          :: Maybe String
+  , _allowAnyExit :: Bool
+  , _command      :: String
   }
 
 data NormalArgs = NormalArgs
-  { file    :: FilePath
-  , key     :: String
-  , command :: T.Text
-  }
+  { file         :: FilePath
+  , key          :: String
+  , allowAnyExit :: Bool
+  , command      :: T.Text
+  } deriving (Show)
 
 normalize :: MonadIO io => BaseArgs -> io NormalArgs
 normalize args = do
@@ -28,6 +31,7 @@ normalize args = do
   return $ NormalArgs
     { file = fullPath
     , key = fromMaybe (_command args) (_key args)
+    , allowAnyExit = _allowAnyExit args
     , command = T.pack (_command args)
     }
 
@@ -49,11 +53,33 @@ keyOption = long "key"
          <> metavar "KEY"
          <> help "The key under which timing for this command is stored (defaults to the full command)"
 
+allowAnyExitFlag :: Mod FlagFields Bool
+allowAnyExitFlag = long "allow-any-exitcode"
+                <> short 'a'
+                <> showDefault
+                <> help "Record timing even if the command exits with a nonzero exitcode"
+
 argParse :: Parser BaseArgs
 argParse = BaseArgs
         <$> strOption fileOption
         <*> optional (strOption keyOption)
+        <*> switch allowAnyExitFlag
         <*> strArgument commandArgument
+
+buildProgram :: NormalArgs -> Program a ExitCode
+buildProgram args =
+  let build = if allowAnyExit args
+                then Programs.basic
+                else Programs.allowAnyExitCode
+  in
+    build (key args) (command args)
+
+runArgs :: BaseArgs -> IO ()
+runArgs baseArgs = do
+  args <- normalize baseArgs
+  let program = buildProgram args
+  exitCode <- runShellJSON (file args) program
+  exitWith exitCode
 
 main :: IO ()
 main = runArgs =<< execParser opts
@@ -62,10 +88,3 @@ main = runArgs =<< execParser opts
       ( fullDesc
      <> progDesc "Run a command with timing and prediction."
      <> header "with-timing - a utility for timing and prediction of shell commands.")
-
-runArgs :: BaseArgs -> IO ()
-runArgs baseArgs = do
-  args <- normalize baseArgs
-  let program = basic (key args) (command args)
-  exitCode <- runShellJSON (file args) program
-  exitWith exitCode

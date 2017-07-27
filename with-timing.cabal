@@ -15,6 +15,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     WithTiming.Program
+                     , WithTiming.Programs
                      , WithTiming.Prediction
   build-depends:       base >= 4.7 && < 5
                      , text <= 1.3

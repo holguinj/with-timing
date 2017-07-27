@@ -1,21 +1,21 @@
 import           Test.Hspec
 
-import qualified Data.Text          as T
-import           System.Exit        (ExitCode (..))
+import qualified Data.Text           as T
+import           System.Exit         (ExitCode (..))
 import           WithTiming.Program
+import           WithTiming.Programs
 
 main :: IO ()
 main = hspec $ do
+  let key = "TestKey"
+  let previous = (Just 1)
+  let duration = 2
+  let goodExit = ExitSuccess
+  let badExit = ExitFailure 666
+  let command = T.pack "man splain"
   describe "basic program" $ do
-    let key = "TestKey"
-    let previous = (Just 1)
-    let duration = 2
-    let goodExit = ExitSuccess
-    let badExit = ExitFailure 666
-    let command = T.pack "man splain"
-    let successful = interpretPure previous duration goodExit (basic key command)
-    let failing = interpretPure previous duration badExit (basic key command)
     describe "on a successful run" $ do
+      let successful = interpretPure previous duration goodExit (basic key command)
       it "reads the previous value" $ do
         successful `hasCommand` (ReadingPrevious key)
       it "makes a prediction based on that value" $ do
@@ -31,10 +31,19 @@ main = hspec $ do
       it "exits as expected" $ do
         successful `exitsWith` goodExit
     describe "on a failing run" $ do
+      let failing = interpretPure previous duration badExit (basic key command)
       it "does not record the result" $ do
-        not (writesAnyResult failing)
+        not (writesSomeResult failing)
       it "exits as expected" $ do
         failing `exitsWith` badExit
+      describe "unless failure should be tolerated, in which case" $ do
+        let failingButOk = interpretPure previous duration badExit (allowAnyExitCode key command)
+        it "should record a result anyway" $ do
+          writesSomeResult failingButOk
+        it "should report the exit code" $ do
+          failingButOk `informs` "666"
+        it "should exit with the command's exit code" $ do
+          failingButOk `exitsWith` badExit
     describe "when there's no previous value" $ do
       let noPrevious = interpretPure Nothing duration goodExit (basic key command)
       it "still calls the prediction function" $ do
@@ -58,7 +67,18 @@ hasCommand prog cmd =
 exitsWith :: [InterpretedCommand] -> ExitCode -> Bool
 exitsWith prog exitCode = prog `hasCommand` (Returning exitCode)
 
-writesAnyResult :: [InterpretedCommand] -> Bool
-writesAnyResult [] = False
-writesAnyResult (WritingResult _ _:cs) = True
-writesAnyResult (_:cs) = writesAnyResult cs
+writesSomeResult :: [InterpretedCommand] -> Bool
+writesSomeResult [] = False
+writesSomeResult (WritingResult _ _:cs) = True
+writesSomeResult (_:cs) = writesSomeResult cs
+
+informs :: [InterpretedCommand] -> String -> Bool
+informs prog substring =
+  any isMatch (allStrings prog)
+  where
+    allStrings [] = []
+    allStrings (Informing str:cs) = str:allStrings cs
+    allStrings (_:cs) = allStrings cs
+    isMatch str = case T.breakOnAll (T.pack substring) (T.pack str) of
+                    [] -> False
+                    _  -> True

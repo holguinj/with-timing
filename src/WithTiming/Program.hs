@@ -4,9 +4,9 @@
 module WithTiming.Program
   ( Command(..)
   , InterpretedCommand(..)
+  , Key
   , interpretPure
   , Program
-  , basic
   , readPrevious
   , predict
   , beginTimer
@@ -21,10 +21,6 @@ import qualified Data.Text          as T
 import           System.Exit        (ExitCode (..))
 
 type Key = String
-
-successful :: ExitCode -> Bool
-successful ExitSuccess = True
-successful _ = False
 
 -- | A type representing steps in a typical program execution. Used in the
 -- Program monad via functions with names that correspond to the type
@@ -83,26 +79,6 @@ inform msg = liftF (Inform msg ())
 -- | Record the results of the current run.
 writeResult :: Key -> Integer -> Program time ()
 writeResult key duration = liftF (WriteResult key duration ())
-
-showSeconds :: Integer -> String
-showSeconds n =
-  let secs = filter (not . (==) '"') (show n) in
-  secs ++ " seconds"
-
--- | A typical example of a program constructed in the 'Program' type.
-basic :: Key -> T.Text -> Program time ExitCode
-basic key command = do
-  prev <- readPrevious key
-  predict prev
-  start <- beginTimer
-  exitCode <- execute command
-  if (successful exitCode) then do
-    time <- secondsSince start
-    inform $ "Command executed successfully in " ++ (showSeconds time) ++ "."
-    writeResult key time
-  else
-    inform "Command failed! Not recording results."
-  return exitCode
 
 -- | A minimal target for interpreting a Program, useful for tests and
 -- debugging. Represents concrete actions that are the result of

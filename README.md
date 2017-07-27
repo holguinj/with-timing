@@ -33,10 +33,11 @@ If all goes well, you'll find `with-timing` in `~/.local/bin/with-timing`.
 
 ## flags
 
-There are currently only two supported flags, both of which are optional:
+There are currently three supported flags, all of which are optional:
 
 * **--file | -f**: the file where timing data is saved/retrieved. By default, it uses `~/.config/with-timing.json`.
 * **--key | -k**: the JSON key under which to save/retrieve data for this run. Defaults to the full command string.
+* **--allow-any-exitcode | -a**: record the timing for this run even if the command exits abnormally.
 
 ## example uses
 
@@ -77,7 +78,8 @@ I work on a lot of Clojure projects where the tests take 5-10 minutes (or longer
 It's important to include `$(pwd)` in the `--key` argument because the command `lein test :all` will take more or less time depending on the project I'm testing.
 I encourage you to use interpolation like that to make sure your predictions are useful.
 
-Another thing to keep in mind with this use case: if the command exits non-zero (e.g., if test fail), the timing won't be recorded for next time.
+Another thing to keep in mind with this use case: by default, if the command exits non-zero (e.g., if test fail) then the timing won't be recorded for next time.
+To change this behavior, use the `--allow-any-exitcode` flag.
 
 ### some computers are faster than others
 
