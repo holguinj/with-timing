@@ -28,7 +28,7 @@ data NormalArgs = NormalArgs
 normalize :: MonadIO io => BaseArgs -> io NormalArgs
 normalize args = do
   fullPath <- getFullPath (_file args)
-  return $ NormalArgs
+  return NormalArgs
     { file = fullPath
     , key = fromMaybe (_command args) (_key args)
     , allowAnyExit = _allowAnyExit args
@@ -68,11 +68,11 @@ argParse = BaseArgs
 
 buildProgram :: NormalArgs -> Program a ExitCode
 buildProgram args =
-  let build = if allowAnyExit args
-                then Programs.basic
-                else Programs.allowAnyExitCode
-  in
-    build (key args) (command args)
+  let build =
+        if allowAnyExit args
+          then Programs.basic
+          else Programs.allowAnyExitCode
+  in build (key args) (command args)
 
 runArgs :: BaseArgs -> IO ()
 runArgs baseArgs = do
