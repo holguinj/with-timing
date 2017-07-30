@@ -1,9 +1,14 @@
 # with-timing
 
-A wrapper for long-running shell commands that:
+If you ever wonder:
 
-* records how long your commands usually take in a JSON-encoded file
-* on subsequent runs, uses the last recorded time to predict how long a command will take.
+  * "do I have time to get some coffee while these tests run?"
+  * "is this command taking way longer than usual?"
+
+Then with-timing might be for you. This small utility is a wrapper for long-running shell commands that:
+
+  * records how long your commands usually take in a JSON-encoded file
+  * on subsequent runs, uses the last recorded time to predict how long a command will take and when it will finish.
 
 for example:
 
@@ -43,7 +48,7 @@ There are currently three supported flags, all of which are optional:
 
 ### provisioning VMs takes forever
 
-I have a script that gets provisions a set of VMs on my company's private infrastructure, but it takes like 15 minutes or something, depending on which flags I pass the provision script:
+I have a script that gets provisions a set of VMs on my company's private infrastructure, but it can take 10-15 minutes or longer, depending on which flags I pass the provision script:
 
 ```
 with-timing "provision.sh --fast-version"
