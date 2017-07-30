@@ -25,7 +25,7 @@ toSeconds :: NominalDiffTime -> Integer
 toSeconds = round
 
 pad :: Integer -> String
-pad n | n < 10 = '0':show n
+pad n | n < 10    = '0':show n
       | otherwise = show n
 
 type ExpandedDiffTime = (Integer, Integer, Integer)
@@ -59,7 +59,7 @@ showDiff = showDiff' . expandDiffTime
 readableEstimate :: Integer -> T.TimeZone -> UTCTime -> String
 readableEstimate previous tz start = do
   let diff = fromInteger previous
-  mconcat ["The previous run finished in ", (showDiff diff), ".\n",
+  mconcat ["The previous run finished in ", showDiff diff, ".\n",
            "That suggests that this run will finish around ", estimateTime diff start, "."]
   where
    toTwelveHour :: T.FormatTime t => t -> String
