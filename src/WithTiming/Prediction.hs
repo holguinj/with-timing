@@ -24,9 +24,7 @@ getLocalTZ = do
   liftIO $ T.getTimeZone now
 
 toSeconds :: NominalDiffTime -> Integer
-toSeconds diff =
-  let secs = filter (/= 's') (show diff) in
-    read secs
+toSeconds = round
 
 pad :: Integer -> String
 pad n | n < 10 = '0':show n
