@@ -1,17 +1,16 @@
 module WithTiming.Programs (basic, allowAnyExitCode) where
 
-import qualified Data.Text          as T
-import           System.Exit        (ExitCode (..))
+import qualified Data.Text             as T
+import           System.Exit           (ExitCode (..))
+import           WithTiming.Prediction (showDiff)
 import           WithTiming.Program
 
 successful :: ExitCode -> Bool
 successful ExitSuccess = True
-successful _ = False
+successful _           = False
 
 showSeconds :: Integer -> String
-showSeconds n =
-  let secs = filter (not . (==) '"') (show n) in
-  secs ++ " seconds"
+showSeconds = showDiff . fromInteger
 
 -- | A typical example of a program constructed in the 'Program' type.
 basic :: Key -> T.Text -> Program time ExitCode

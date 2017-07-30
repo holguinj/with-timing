@@ -1,12 +1,19 @@
 import           Test.Hspec
 
-import qualified Data.Text           as T
-import           System.Exit         (ExitCode (..))
+import qualified Data.Text             as T
+import           Data.Time             (NominalDiffTime)
+import           System.Exit           (ExitCode (..))
+import           WithTiming.Prediction (showDiff)
 import           WithTiming.Program
 import           WithTiming.Programs
 
 main :: IO ()
-main = hspec $ do
+main = do
+  hspec showDiffTest
+  hspec programTest
+
+programTest :: Spec
+programTest = do
   let key = "TestKey"
   let previous = (Just 1)
   let duration = 2
@@ -51,6 +58,30 @@ main = hspec $ do
       it "executes the command" $ do
         noPrevious `hasCommand` (Executing command)
 
+showDiffTest :: Spec
+showDiffTest = do
+  let under60 = seconds 59
+  let over60 = seconds 61
+  let under1hour = seconds $ (60 * 60) - 1
+  let over1hour = seconds $ (60 * 60) + 1
+  let hour30 = seconds $ (60 * 60) + (60 * 30)
+  describe "The showDiff function" $ do
+    it "handles pluralization" $ do
+      showDiff 0 `shouldBe` "0 seconds"
+      showDiff 1 `shouldBe` "1 second"
+    it "works for values under a minute" $ do
+      showDiff under60 `shouldBe` "59 seconds"
+    it "works for values over a minute" $ do
+      showDiff over60 `shouldBe` "1:01"
+    it "works for values under an hour" $ do
+      showDiff under1hour `shouldBe` "59:59"
+    it "works for values over one hour" $ do
+      showDiff over1hour `shouldBe` "1:00:01"
+    it "works for an hour and a half" $ do
+      showDiff hour30 `shouldBe` "1:30:00"
+  where
+    seconds :: Integer -> NominalDiffTime
+    seconds = fromInteger
 
 
 -- Helpers
@@ -65,20 +96,20 @@ hasCommand prog cmd =
   |> (== 1)
 
 exitsWith :: [InterpretedCommand] -> ExitCode -> Bool
-exitsWith prog exitCode = prog `hasCommand` (Returning exitCode)
+exitsWith prog exitCode = prog `hasCommand` Returning exitCode
 
 writesSomeResult :: [InterpretedCommand] -> Bool
-writesSomeResult [] = False
-writesSomeResult (WritingResult _ _:cs) = True
-writesSomeResult (_:cs) = writesSomeResult cs
+writesSomeResult []                     = False
+writesSomeResult (WritingResult _ _:_)  = True
+writesSomeResult (_:cs)                 = writesSomeResult cs
 
 informs :: [InterpretedCommand] -> String -> Bool
 informs prog substring =
   any isMatch (allStrings prog)
   where
-    allStrings [] = []
+    allStrings []                 = []
     allStrings (Informing str:cs) = str:allStrings cs
-    allStrings (_:cs) = allStrings cs
+    allStrings (_:cs)             = allStrings cs
     isMatch str = case T.breakOnAll (T.pack substring) (T.pack str) of
                     [] -> False
                     _  -> True

@@ -14,7 +14,7 @@ done
 Command executed successfully in 2 seconds.
 
 $ with-timing "sleep 2; echo done"
-The previous run finished in 2s.
+The previous run finished in 2 seconds.
 That suggests that this run will finish around 10:10:43 PM.
 done
 Command executed successfully in 2 seconds.
