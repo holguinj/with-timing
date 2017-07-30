@@ -7,10 +7,9 @@ import           WithTiming.Prediction (showDiff)
 import           WithTiming.Program
 import           WithTiming.Programs
 
-allTests :: [Spec]
-allTests = [ programTest
-           , showDiffTest
-           ]
+allTests :: Spec
+allTests = programTest
+           >> showDiffTest
 
 programTest :: Spec
 programTest = do
@@ -84,8 +83,7 @@ showDiffTest = do
     seconds = fromInteger
 
 main :: IO ()
-main = do
-  mapM_ hspec allTests
+main = hspec allTests
 
 -- Helpers
 
