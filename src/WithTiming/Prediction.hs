@@ -19,9 +19,7 @@ getCurrentTime = liftIO T.getCurrentTime
 
 -- |Returns the current local time zone.
 getLocalTZ :: MonadIO io => io T.TimeZone
-getLocalTZ = do
-  now <- getCurrentTime
-  liftIO $ T.getTimeZone now
+getLocalTZ = liftIO (getCurrentTime >>= T.getTimeZone)
 
 toSeconds :: NominalDiffTime -> Integer
 toSeconds = round
