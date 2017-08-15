@@ -70,8 +70,8 @@ buildProgram :: NormalArgs -> Program a ExitCode
 buildProgram args =
   let build =
         if allowAnyExit args
-          then Programs.basic
-          else Programs.allowAnyExitCode
+          then Programs.allowAnyExitCode
+          else Programs.basic
   in build (key args) (command args)
 
 runArgs :: BaseArgs -> IO ()
