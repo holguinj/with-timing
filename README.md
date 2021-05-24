@@ -30,7 +30,7 @@ Command executed successfully in 2 seconds.
 There are no packages or tarballs (yet), so you'll have to install it from source.
 First, make sure you have [stack](https://haskellstack.org) installed, then:
 
-1. `git clone https://github.com/holguinj/with-timing`
+1. `git clone https://github.com/juxtin/with-timing`
 2. `cd with-timing`
 3. `stack build && stack install`
 
